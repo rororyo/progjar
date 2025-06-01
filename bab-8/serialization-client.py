@@ -22,6 +22,7 @@ while 1:
     #using pickle
     # msg = pickle.dumps(msg)
     # s.send(msg)
+    
     #using json
     msg_dict = bytes(json.dumps(msg_dict),'utf-8')
     s.send(msg_dict)

@@ -7,6 +7,8 @@ client_socket.connect(server_address)
 message = b'Hello, Server!'
 client_socket.send(message)
 recv_message = client_socket.recv(1024)
+# get message and address
+# recv_message,server_address = client_socket.recvfrom(1024)
 print(recv_message.decode())
 
 client_socket.close()

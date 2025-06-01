@@ -1,4 +1,4 @@
-#without connect use send and recv
+#with connect use send and recv
 import socket
 
 server_address = ('127.0.0.1',5001)

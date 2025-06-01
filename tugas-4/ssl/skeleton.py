@@ -8,6 +8,7 @@ from io import StringIO
 test_hostname = 'www.google.com'
 test_port = 443
 
+cert_data = {'subject': ((('commonName', 'www.google.com'),),), 'issuer': ((('countryName', 'US'),), (('organizationName', 'Google Trust Services'),), (('commonName', 'WR2'),)), 'version': 3, 'serialNumber': '769C7B331D8F61240996E8FB5EEDCA99', 'notBefore': 'May 12 08:44:44 2025 GMT', 'notAfter': 'Aug  4 08:44:43 2025 GMT', 'subjectAltName': (('DNS', 'www.google.com'),), 'OCSP': ('http://o.pki.goog/wr2',), 'caIssuers': ('http://i.pki.goog/wr2.crt',), 'crlDistributionPoints': ('http://c.pki.goog/wr2/oBFYYahzgVI.crl',)}
 # Establish an SSL connection and retrieve peer certificate
 def get_ssl_certificate(hostname, port):
     context = ssl.create_default_context()
@@ -18,7 +19,7 @@ def get_ssl_certificate(hostname, port):
             # common_name =cert['subject']
             #convert to dict
             # common_name_dict = dict(x[0] for x in common_name)
-            return cert
+            return cert_data
 
 # Verify that certificate contains expected fields
 def assert_cert_has_fields(cert, fields):
