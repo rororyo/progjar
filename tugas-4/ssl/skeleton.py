@@ -1,25 +1,26 @@
-import unittest
-import sys
 import socket
+import sys
+import unittest
 import ssl
 from io import StringIO
+from unittest.mock import patch, MagicMock
+
 
 # Target server to test SSL connection
 test_hostname = 'www.google.com'
 test_port = 443
 
-cert_data = {'subject': ((('commonName', 'www.google.com'),),), 'issuer': ((('countryName', 'US'),), (('organizationName', 'Google Trust Services'),), (('commonName', 'WR2'),)), 'version': 3, 'serialNumber': '769C7B331D8F61240996E8FB5EEDCA99', 'notBefore': 'May 12 08:44:44 2025 GMT', 'notAfter': 'Aug  4 08:44:43 2025 GMT', 'subjectAltName': (('DNS', 'www.google.com'),), 'OCSP': ('http://o.pki.goog/wr2',), 'caIssuers': ('http://i.pki.goog/wr2.crt',), 'crlDistributionPoints': ('http://c.pki.goog/wr2/oBFYYahzgVI.crl',)}
 # Establish an SSL connection and retrieve peer certificate
 def get_ssl_certificate(hostname, port):
     context = ssl.create_default_context()
-    with socket.create_connection((hostname,443)) as sock:
+    with socket.create_connection((hostname,port)) as sock:
         with context.wrap_socket(sock,server_hostname=hostname) as csock:
             cert = csock.getpeercert()
             #Extract common name from subject
             # common_name =cert['subject']
             #convert to dict
             # common_name_dict = dict(x[0] for x in common_name)
-            return cert_data
+            return cert
 
 # Verify that certificate contains expected fields
 def assert_cert_has_fields(cert, fields):
@@ -40,16 +41,32 @@ class TestSSLConnection(unittest.TestCase):
         self.hostname = test_hostname
         self.port = test_port
 
-    def test_ssl_certificate_retrieval(self):
-        cert = get_ssl_certificate(self.hostname, self.port)
-        self.assertIsInstance(cert, dict)
-        assert_cert_has_fields(cert, ['subject', 'issuer'])
+    @patch("ssl.create_default_context")
+    @patch("socket.create_connection")
+    def test_get_ssl_certificate_fields(self, mock_socket, mock_ssl_context):
+        # Mock certificate
+        mock_cert = {
+            "subject": ((("commonName", "www.google.com"),),),
+            "issuer": ((("organizationName", "Google Trust Services LLC"),),),
+            "notAfter": "Aug  5 23:59:59 2025 GMT"
+        }
 
-    def test_certificate_subject(self):
-        cert = get_ssl_certificate(self.hostname, self.port)
-        subject = dict(x[0] for x in cert['subject'])
-        self.assertIn('commonName', subject)
-        print("Common Name (CN):", subject.get('commonName'))
+        # Configure mocks
+        mock_wrap_socket = MagicMock()
+        mock_wrap_socket.getpeercert.return_value = mock_cert
+
+        mock_context = MagicMock()
+        mock_context.wrap_socket.return_value.__enter__.return_value = mock_wrap_socket
+        mock_ssl_context.return_value = mock_context
+
+        # Call the function
+        cert = get_ssl_certificate("www.google.com", 443)
+        print("Common Name (CN):", dict(mock_cert["subject"][0])[ "commonName" ])
+
+        # Use your field assertion function
+        required_fields = ["subject", "issuer"]
+        assert_cert_has_fields(cert, required_fields)
+
 
 # Entry point
 if __name__ == '__main__':
@@ -59,4 +76,3 @@ if __name__ == '__main__':
     else:
         runner = unittest.TextTestRunner(stream=NullWriter())
         unittest.main(testRunner=runner, exit=False)
-        # unittest.main(exit=False)

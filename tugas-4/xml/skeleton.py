@@ -31,11 +31,13 @@ def xml_to_dict(xml_str):
     root = ET.fromstring(xml_str)
     result = {}
     for child in root:
+        # If child has children, it's a list
         if len(child) > 0:
+            # Convert children to list
             result[child.tag] = [item.text for item in child]
-        else:
+        else: # Otherwise, it's a single value
+            # Get text and cast to original type
             text = child.text
-            # Try to cast values back to original types
             if text == 'True':
                 result[child.tag] = True
             elif text == 'False':
@@ -44,6 +46,7 @@ def xml_to_dict(xml_str):
                 result[child.tag] = int(text)
             else:
                 result[child.tag] = text
+    # print(result['skills'])
     return result
 
 # Function to assert that two dictionaries are equal
